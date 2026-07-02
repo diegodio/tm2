@@ -371,12 +371,13 @@ div[data-testid="stColumn"] div[data-testid="stVerticalBlock"]:has(div[class*="s
 }
 .st-key-btn_salvar button:hover { filter: brightness(1.08); }
 
-/* Enviar para sem lugar / sair / login: contorno discreto */
+/* Enviar para sem lugar / sair / login / baixar mapeamento: contorno discreto */
 .st-key-btn_semlugar button,
 .st-key-btn_sair button,
 .st-key-btn_sair_negado button,
 .st-key-btn_google button,
-.st-key-btn_demo button {
+.st-key-btn_demo button,
+.st-key-btn_baixar_json button {
     background: var(--superficie) !important;
     color: var(--texto) !important;
     border: 1px solid rgba(79,134,198,.45) !important;
@@ -387,7 +388,17 @@ div[data-testid="stColumn"] div[data-testid="stVerticalBlock"]:has(div[class*="s
 .st-key-btn_semlugar button:hover,
 .st-key-btn_sair button:hover,
 .st-key-btn_google button:hover,
-.st-key-btn_demo button:hover { border-color: var(--dourado) !important; }
+.st-key-btn_demo button:hover,
+.st-key-btn_baixar_json button:hover { border-color: var(--dourado) !important; }
+
+/* O botão "enviar para sem lugar" SEMPRE ocupa o mesmo espaço (para a
+   sala não pular), mas só aparece quando um aluno está selecionado.
+   Enquanto desabilitado, fica INVISÍVEL (não apenas acinzentado) e
+   não reage ao mouse — o espaço continua reservado via visibility. */
+.st-key-btn_semlugar button:disabled {
+    visibility: hidden;
+    pointer-events: none;
+}
 
 /* ---------- Tela de login ---------- */
 .cartao-login {
