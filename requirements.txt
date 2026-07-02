@@ -1,0 +1,11 @@
+# Interface (>=1.42 é necessário para o login nativo com Google: st.login)
+streamlit>=1.42
+
+# Processamento das fotos dos alunos
+Pillow>=10.0
+
+# Chamadas REST ao Firebase (salvar/carregar mapeamento)
+requests>=2.31
+
+# Biblioteca OAuth usada internamente pelo st.login()
+Authlib>=1.3.2
