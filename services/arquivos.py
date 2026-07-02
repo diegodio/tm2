@@ -15,8 +15,12 @@ Os dados de cada turma ficam em dados/<turno>/<turma>/info.json:
                                         NUM_FILAS = extremo direito)
   Exemplos: "(1,1)" = primeira cadeira da primeira fila (frente-esquerda);
             "(8,5)" = fundo da última fila (fundo-direita).
-  Opcional: quem não tiver "posicao" cai nas primeiras carteiras
-  VAZIAS que sobrarem.
+  Caso especial "(0,0)" → o aluno começa na área "sem lugar" (fora da
+  grade), não em uma carteira. É o mesmo formato usado pelo botão
+  "Baixar mapeamento": quem está "sem lugar" sai no arquivo com
+  "posicao": "(0,0)".
+  Campo "posicao" ausente/vazio: o aluno cai em uma das carteiras
+  VAZIAS restantes (ver `services.mapeamento.gerar_estado_inicial`).
 
 As fotos (opcionais) ficam na mesma pasta, com o nome do aluno:
 "NOME COMPLETO DO ALUNO.jpg".
@@ -63,10 +67,11 @@ def _ler_info_bruto(turno: str, turma: str) -> dict:
 def carregar_alunos(turno: str, turma: str) -> dict[str, str | None]:
     """Retorna {nome: posicao_desejada} lida do info.json.
 
-    - A posição vem como string no formato "(fila,posicao_na_fila)"
-      (por exemplo, "(1,1)"). Se o aluno não tiver o campo "posicao",
-      ou se estiver em branco, o valor é None e o aluno será colocado
-      em uma das carteiras VAZIAS restantes pelo `gerar_mapeamento_inicial`.
+    - A posição vem como string no formato "(cadeira,fila)" (por
+      exemplo, "(1,1)"), ou "(0,0)" para aluno sem lugar. Se o aluno
+      não tiver o campo "posicao", ou se estiver em branco, o valor é
+      None e o aluno será colocado em uma das carteiras VAZIAS
+      restantes por `services.mapeamento.gerar_estado_inicial`.
     - Nomes vazios/inválidos são descartados.
     """
     resultado: dict[str, str | None] = {}
