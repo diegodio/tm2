@@ -16,6 +16,14 @@ sem_lugar: list[str]
 Posicao = (fila, posicao_na_fila)
     fila: 1..NUM_FILAS  ·  posicao_na_fila: 1..CADEIRAS_POR_FILA
     A posição 1 é a carteira da FRENTE (junto à mesa do professor).
+
+ENTRADA `alunos`
+----------------
+`alunos` é o retorno de `services.arquivos.carregar_alunos()`:
+`dict[nome_do_aluno, posicao_desejada | None]`, onde a posição vem no
+formato externo "(cadeira,fila)" ou é None quando o info.json não
+informa a carteira do aluno. `chave_para_posicao` cuida da conversão
+para o formato interno Posicao = (fila, cadeira).
 """
 import re
 
@@ -27,19 +35,33 @@ _PADRAO_POSICAO = re.compile(r"\(\s*(\d+)\s*,\s*(\d+)\s*\)")
 
 
 # ------------------------------------------------------------------
-# Conversão de chaves (usada ao salvar/carregar JSON do Firebase)
+# Conversão de chaves
 # ------------------------------------------------------------------
-def chave_para_posicao(chave: str) -> Posicao | None:
-    """'(1,2)' -> (1, 2). Tolera espaços: '( 1 , 2 )'. Retorna None se inválida."""
-    m = _PADRAO_POSICAO.fullmatch(chave.strip())
+# CONVENÇÃO EXTERNA (info.json e Firebase): "(cadeira,fila)"
+#   Ex.: "(1,1)" = cadeira 1 (da esquerda) da fila 1 (da frente).
+#        "(8,1)" = cadeira 8 (do fundo) da fila 1 (esquerda).
+#        "(5,5)" = cadeira 5 da fila 5 (direita).
+# CONVENÇÃO INTERNA: Posicao = (fila, cadeira) — fila 1..NUM_FILAS
+#   e cadeira 1..CADEIRAS_POR_FILA. É o formato usado no render e nas
+#   operações do mapa.
+# Por isso as duas funções abaixo INVERTEM a ordem — para manter a
+# convenção externa consistente onde quer que o usuário a veja.
+def chave_para_posicao(chave: str | None) -> Posicao | None:
+    """'(cadeira,fila)' -> (fila, cadeira). Tolera espaços: '( 1 , 2 )'.
+    Retorna None para entrada None, vazia ou fora do formato."""
+    if not chave:
+        return None
+    m = _PADRAO_POSICAO.fullmatch(str(chave).strip())
     if not m:
         return None
-    return int(m.group(1)), int(m.group(2))
+    cadeira, fila = int(m.group(1)), int(m.group(2))
+    return fila, cadeira
 
 
 def posicao_para_chave(pos: Posicao) -> str:
-    """(1, 2) -> '(1,2)'"""
-    return f"({pos[0]},{pos[1]})"
+    """(fila, cadeira) -> '(cadeira,fila)' — inversa de chave_para_posicao."""
+    fila, cadeira = pos
+    return f"({cadeira},{fila})"
 
 
 # ------------------------------------------------------------------
@@ -60,19 +82,47 @@ def posicao_valida(pos: Posicao) -> bool:
     return 1 <= pos[0] <= NUM_FILAS and 1 <= pos[1] <= CADEIRAS_POR_FILA
 
 
-def gerar_mapeamento_inicial(alunos: dict[str, str]) -> dict[Posicao, str]:
-    """Distribui os alunos em ordem alfabética preenchendo fila por fila
-    (fila 1 da posição 1 à 8, depois fila 2, ...). Todas as carteiras
-    restantes recebem VAZIO — a grade fica sempre completa."""
-    nomes = sorted(alunos.keys())
+def _primeira_vaga(mapa: dict[Posicao, str]) -> Posicao | None:
+    """Primeira carteira VAZIA da grade, na ordem de `todas_as_posicoes()`.
+    Retorna None se a sala estiver cheia."""
+    return next((p for p in todas_as_posicoes() if mapa[p] == VAZIO), None)
+
+
+def gerar_mapeamento_inicial(
+    alunos: dict[str, str | None],
+) -> dict[Posicao, str]:
+    """Cria a grade 5 × 8 respeitando as posições declaradas no info.json.
+
+    Regras (in order):
+    1. Cada aluno com `posicao` válida ("(fila,posicao_na_fila)" dentro
+       da grade) é colocado exatamente onde pediu.
+    2. Se dois alunos declararem a MESMA posição, o primeiro fica com
+       ela; os demais entram no fluxo do passo 3.
+    3. Alunos sem posição (ou com posição inválida/ocupada) são
+       distribuídos, em ordem alfabética, nas carteiras VAZIAS
+       restantes (fila 1 pos.1..8, fila 2 pos.1..8, ...).
+    4. Excedentes (mais alunos que carteiras) ficarão "sem lugar",
+       tratados por `reconciliar()` — chamada logo depois no app.
+    """
     mapa: dict[Posicao, str] = {pos: VAZIO for pos in todas_as_posicoes()}
-    for indice, nome in enumerate(nomes):
-        fila = indice // CADEIRAS_POR_FILA + 1
-        posicao = indice % CADEIRAS_POR_FILA + 1
-        if fila <= NUM_FILAS:
-            mapa[(fila, posicao)] = nome
-        # Se houver mais alunos que carteiras, os excedentes ficarão
-        # "sem lugar" (tratados por reconciliar(), chamada no app).
+    sem_posicao: list[str] = []
+
+    # Passo 1 e 2 — respeita a posição declarada
+    for nome, posicao_str in alunos.items():
+        pos = chave_para_posicao(posicao_str)
+        if pos and posicao_valida(pos) and mapa[pos] == VAZIO:
+            mapa[pos] = nome
+        else:
+            sem_posicao.append(nome)
+
+    # Passo 3 — sobras entram nas carteiras que ainda estão VAZIAS,
+    # em ordem alfabética para dar previsibilidade.
+    for nome in sorted(sem_posicao):
+        vaga = _primeira_vaga(mapa)
+        if vaga is None:
+            break  # sala cheia; `reconciliar()` mandará para sem_lugar
+        mapa[vaga] = nome
+
     return mapa
 
 
@@ -90,7 +140,7 @@ def completar_grade(mapa: dict[Posicao, str]) -> None:
 def reconciliar(
     mapa: dict[Posicao, str],
     sem_lugar: list[str],
-    alunos: dict[str, str],
+    alunos: dict[str, str | None],
 ) -> None:
     """Sincroniza (in place) o mapeamento com a lista oficial de alunos
     do info.json:
@@ -98,7 +148,8 @@ def reconciliar(
     1. Nomes no mapa que não existem mais no info.json viram VAZIO.
     2. Nomes na lista sem_lugar que não existem mais são removidos.
     3. Alunos novos (que não estão nem no mapa nem em sem_lugar) são
-       colocados nas primeiras carteiras VAZIAS; se a sala lotar,
+       colocados PRIMEIRO na sua `posicao` declarada, se estiver livre;
+       caso contrário, nas primeiras carteiras VAZIAS. Se a sala lotar,
        vão para a lista de "sem lugar".
     """
     nomes_validos = set(alunos)
@@ -111,10 +162,31 @@ def reconciliar(
     # 2) limpa a lista de sem lugar
     sem_lugar[:] = [n for n in sem_lugar if n in nomes_validos]
 
-    # 3) encaixa alunos novos
+    # 3) encaixa alunos novos: PRIMEIRO os que declararam `posicao`
+    #    (para não terem a vaga "roubada" por outro novo sem posição),
+    #    DEPOIS os demais. Cada grupo é processado em ordem alfabética
+    #    para dar previsibilidade.
     presentes = {n for n in mapa.values() if n != VAZIO} | set(sem_lugar)
-    for nome in sorted(nomes_validos - presentes):
-        vaga = next((p for p in todas_as_posicoes() if mapa[p] == VAZIO), None)
+    novos = nomes_validos - presentes
+    com_posicao: list[tuple[str, Posicao]] = []
+    sem_posicao_declarada: list[str] = []
+    for nome in sorted(novos):
+        pos = chave_para_posicao(alunos.get(nome))
+        if pos and posicao_valida(pos):
+            com_posicao.append((nome, pos))
+        else:
+            sem_posicao_declarada.append(nome)
+
+    # 3a) posições declaradas primeiro (se a vaga estiver livre)
+    for nome, pos in com_posicao:
+        if mapa.get(pos) == VAZIO:
+            mapa[pos] = nome
+        else:
+            sem_posicao_declarada.append(nome)
+
+    # 3b) sem posição (ou com posição já ocupada): primeira vaga VAZIA
+    for nome in sem_posicao_declarada:
+        vaga = _primeira_vaga(mapa)
         if vaga is not None:
             mapa[vaga] = nome
         else:
