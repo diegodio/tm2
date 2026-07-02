@@ -1,0 +1,41 @@
+{
+  "(1,1)": "Bulbasaur",
+  "(1,2)": "Ivysaur",
+  "(1,3)": "Venusaur",
+  "(1,4)": "Charmander",
+  "(1,5)": "Charmeleon",
+  "(1,6)": "Charizard",
+  "(1,7)": "Squirtle",
+
+  "(2,1)": "Wartortle",
+  "(2,2)": "Blastoise",
+  "(2,3)": "Caterpie",
+  "(2,4)": "Metapod",
+  "(2,5)": "Butterfree",
+  "(2,6)": "Weedle",
+  "(2,7)": "Kakuna",
+
+  "(3,1)": "Beedrill",
+  "(3,2)": "Pidgey",
+  "(3,3)": "Pidgeotto",
+  "(3,4)": "Pidgeot",
+  "(3,5)": "Rattata",
+  "(3,6)": "Raticate",
+  "(3,7)": "Spearow",
+
+  "(4,1)": "Fearow",
+  "(4,2)": "Ekans",
+  "(4,3)": "Arbok",
+  "(4,4)": "Pikachu",
+  "(4,5)": "Raichu",
+  "(4,6)": "Sandshrew",
+  "(4,7)": "Sandslash",
+
+  "(5,1)": "Nidoran♀",
+  "(5,2)": "Nidorina",
+  "(5,3)": "Nidoqueen",
+  "(5,4)": "Nidoran♂",
+  "(5,5)": "Nidorino",
+  "(5,6)": "Nidoking",
+  "(5,7)": "Clefairy"
+}
