@@ -18,6 +18,8 @@ professor           → vê apenas suas "turmas";
 """
 import streamlit as st
 
+from utils.constantes import NOME_COLEGIO
+from utils.html_utils import compactar
 from config.usuarios import ROTULOS_PAPEIS, USUARIOS_AUTORIZADOS
 from services import arquivos
 
@@ -162,17 +164,17 @@ def rotulo_papel(usuario: dict) -> str:
 def render_pagina_login() -> None:
     """Tela inicial: botão de login com Google + botão de demonstração."""
     st.markdown(
-        """
+        compactar(f"""
         <div class="cartao-login">
             <div class="brasao brasao-login">🏫</div>
             <p class="titulo-app">Mapa da <span class="destaque">Sala</span></p>
-            <p class="subtitulo-login">Escolas Cívico-Militares · Paraná</p>
+            <p class="subtitulo-login">{NOME_COLEGIO}</p>
             <p class="texto-login">
                 Acesso restrito a servidores autorizados.<br>
                 Entre com sua conta Google institucional.
             </p>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 
@@ -208,7 +210,7 @@ def render_pagina_login() -> None:
 def render_nao_autorizado(usuario: dict) -> None:
     """Tela para quem logou no Google mas não está na lista de autorizados."""
     st.markdown(
-        f"""
+        compactar(f"""
         <div class="cartao-login">
             <div class="brasao brasao-login">🚫</div>
             <p class="titulo-app">Acesso <span class="destaque">negado</span></p>
@@ -219,7 +221,7 @@ def render_nao_autorizado(usuario: dict) -> None:
                 <code>config/usuarios.py</code>.
             </p>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
     if st.button("Sair", key="btn_sair_negado"):

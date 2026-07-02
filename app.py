@@ -33,13 +33,14 @@ from services.mapeamento import (
     gerar_mapeamento_inicial,
     reconciliar,
 )
-from utils.constantes import ROTULOS_TURNOS, VAZIO
+from utils.constantes import NOME_COLEGIO, ROTULOS_TURNOS, VAZIO
+from utils.html_utils import compactar
 
 # ------------------------------------------------------------------
 # Configuração da página + estilos
 # ------------------------------------------------------------------
 st.set_page_config(
-    page_title="Mapa da Sala",
+    page_title=f"Mapa da Sala · {NOME_COLEGIO}",
     page_icon="🏫",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -65,10 +66,11 @@ if not usuario["autorizado"]:
 turno, turma = render_sidebar(usuario)
 if turno is None or turma is None:
     st.markdown(
-        """
+        compactar(f"""
         <div class="faixa-titulo">
             <div class="brasao">🏫</div>
             <div class="bloco-titulo">
+                <p class="nome-colegio">{NOME_COLEGIO}</p>
                 <p class="titulo-app">Mapa da <span class="destaque">Sala</span></p>
                 <div class="linha-meta">
                     <span class="meta-info">Crie a estrutura em
@@ -77,7 +79,7 @@ if turno is None or turma is None:
                 </div>
             </div>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
     st.stop()
@@ -152,10 +154,11 @@ total_no_mapa = sum(1 for n in mapa.values() if n != VAZIO)
 dica = "toque em dois cards para trocar lugares" if editavel else "visualização"
 
 st.markdown(
-    f"""
+    compactar(f"""
     <div class="faixa-titulo">
         <div class="brasao">🏫</div>
         <div class="bloco-titulo">
+            <p class="nome-colegio">{NOME_COLEGIO}</p>
             <p class="titulo-app">Turma <span class="destaque">{turma}</span></p>
             <div class="linha-meta">
                 <span class="pill-turno">☀ {rotulo_turno}</span>
@@ -165,7 +168,7 @@ st.markdown(
             </div>
         </div>
     </div>
-    """,
+    """),
     unsafe_allow_html=True,
 )
 
@@ -185,8 +188,10 @@ if editavel and st.session_state.get("alterado"):
         '<div class="chip-alterado">● Alterações não salvas — use o botão '
         "Salvar no fim da página</div>"
     )
+# A .area-status tem ALTURA FIXA no CSS: com ou sem avisos, ocupa
+# sempre o mesmo espaço — a sala abaixo não se desloca ao selecionar.
 st.markdown(
-    f'<div class="area-status">{"".join(partes_status)}</div>',
+    compactar(f'<div class="area-status">{"".join(partes_status)}</div>'),
     unsafe_allow_html=True,
 )
 

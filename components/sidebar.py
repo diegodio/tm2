@@ -3,6 +3,9 @@ turno/turma — mostrando APENAS as turmas que o usuário pode ver
 (diretor e pedagoga veem todas; professor vê só as dele)."""
 import streamlit as st
 
+from utils.constantes import NOME_COLEGIO
+from utils.html_utils import compactar
+
 from services import auth
 from utils.constantes import ROTULOS_TURNOS
 
@@ -13,17 +16,17 @@ def render_sidebar(usuario: dict) -> tuple[str | None, str | None]:
     with st.sidebar:
         # ---------- Cabeçalho ----------
         st.markdown(
-            """
+            compactar(f"""
             <div style="padding:.2rem 0 .8rem;">
                 <div style="font-family:'Sora',sans-serif;font-weight:800;
                             font-size:1.05rem;color:#EDF2F9;">
                     🏫 Mapa da Sala
                 </div>
                 <div style="color:#9FB3CE;font-size:.78rem;margin-top:.15rem;">
-                    Escolas Cívico-Militares · PR
+                    {NOME_COLEGIO}
                 </div>
             </div>
-            """,
+            """),
             unsafe_allow_html=True,
         )
 
@@ -34,7 +37,7 @@ def render_sidebar(usuario: dict) -> tuple[str | None, str | None]:
             else ""
         )
         st.markdown(
-            f"""
+            compactar(f"""
             <div class="cartao-usuario">
                 <div class="usuario-nome">{usuario['nome']}</div>
                 <div class="usuario-email">{usuario['email']}</div>
@@ -43,7 +46,7 @@ def render_sidebar(usuario: dict) -> tuple[str | None, str | None]:
                     {selo_demo}
                 </div>
             </div>
-            """,
+            """),
             unsafe_allow_html=True,
         )
         if st.button("Sair", key="btn_sair", use_container_width=True):

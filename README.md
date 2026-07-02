@@ -55,7 +55,7 @@ services/                   # regras e integrações
     arquivos.py             # leitura de dados/ (turnos, turmas, info.json)
     imagens.py              # fotos dos alunos (busca por nome + cache)
 utils/
-    constantes.py           # nº de filas/carteiras, marcador VAZIO, turnos
+    constantes.py           # nome do colégio, nº de filas/carteiras, VAZIO, turnos
     paths.py                # caminhos do projeto
 assets/
     avatar_padrao.png       # foto padrão de quem não tem imagem
@@ -84,7 +84,7 @@ Cada turma é uma pasta `dados/<turno>/<turma>/` com um `info.json`:
 Extensões aceitas: `.jpg .jpeg .png .webp .bmp`. Sem foto, usa-se o avatar padrão.
 
 **Dimensões da sala**: se um dia precisar de outra grade, mude `NUM_FILAS` e
-`CADEIRAS_POR_FILA` em `utils/constantes.py`.
+`CADEIRAS_POR_FILA` em `utils/constantes.py`. O nome do colégio exibido no cabeçalho, no login e na aba do navegador é a constante `NOME_COLEGIO` no mesmo arquivo.
 
 ---
 

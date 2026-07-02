@@ -5,6 +5,12 @@ para você ajustar em um único lugar.
 """
 
 # ---------------------------------------------------------------
+# Identificação do colégio (aparece no cabeçalho, no login e na aba
+# do navegador)
+# ---------------------------------------------------------------
+NOME_COLEGIO = "CECM Prof. Newton Guimarães"
+
+# ---------------------------------------------------------------
 # Dimensões fixas da sala
 # ---------------------------------------------------------------
 # A sala SEMPRE tem NUM_FILAS filas e CADEIRAS_POR_FILA carteiras

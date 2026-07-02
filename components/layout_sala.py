@@ -49,6 +49,7 @@ from services.mapeamento import (
 )
 from utils import paths
 from utils.constantes import CADEIRAS_POR_FILA, NUM_FILAS, VAZIO
+from utils.html_utils import compactar
 
 
 def _rotulo(nome: str) -> str:
@@ -143,8 +144,12 @@ def _enviar_para_sem_lugar() -> None:
 # Renderização
 # ------------------------------------------------------------------
 def render_barra_acoes(editavel: bool) -> bool:
-    """Barra acima da sala: botão "Enviar para sem lugar" (quando uma
-    carteira com aluno está selecionada). Retorna True se desenhou algo.
+    """Barra acima da sala: botão "Enviar para sem lugar".
+
+    O botão fica SEMPRE visível quando o usuário pode editar — apenas
+    desabilitado enquanto nenhum ALUNO de carteira estiver selecionado.
+    Assim a barra ocupa sempre a mesma altura e a sala abaixo não se
+    desloca quando um card é selecionado.
 
     Obs.: o botão "Salvar" fica no app.py, junto da chamada ao Firebase.
     """
@@ -152,14 +157,17 @@ def render_barra_acoes(editavel: bool) -> bool:
         return False
     selecao = st.session_state.get("selecionado")
     mapa = st.session_state["mapa"]
-    if selecao and selecao[0] == "carteira" and mapa.get(selecao[1], VAZIO) != VAZIO:
-        st.button(
-            "🪑 Enviar aluno selecionado para «sem lugar»",
-            key="btn_semlugar",
-            on_click=_enviar_para_sem_lugar,
-        )
-        return True
-    return False
+    tem_aluno_selecionado = bool(
+        selecao and selecao[0] == "carteira" and mapa.get(selecao[1], VAZIO) != VAZIO
+    )
+    st.button(
+        "🪑 Enviar aluno selecionado para «sem lugar»",
+        key="btn_semlugar",
+        on_click=_enviar_para_sem_lugar,
+        disabled=not tem_aluno_selecionado,
+        help=None if tem_aluno_selecionado else "Selecione um aluno no mapa primeiro.",
+    )
+    return True
 
 
 def render_sala(
@@ -221,12 +229,12 @@ def render_sem_lugar(
     pasta = paths.pasta_turma(turno, turma)
 
     st.markdown(
-        f"""
+        compactar(f"""
         <div class="secao-sem-lugar-titulo">
             🪑 Alunos sem lugar no mapa
             <span class="contador-sem-lugar">{len(sem_lugar)}</span>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 

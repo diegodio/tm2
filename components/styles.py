@@ -113,6 +113,14 @@ div[data-baseweb="popover"] li { background: var(--superficie); }
     border: 1px solid rgba(212,160,23,.6);
     box-shadow: 0 8px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1);
 }
+/* Nome do colégio, exibido acima do título */
+.nome-colegio {
+    margin: 0 0 .1rem;
+    color: var(--dourado);
+    font-family: 'Sora', sans-serif;
+    font-size: .74rem; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+}
 .titulo-app {
     font-family: 'Sora', sans-serif; font-weight: 800;
     font-size: clamp(1.7rem, 4.2vw, 2.4rem);
@@ -157,11 +165,21 @@ div[data-baseweb="popover"] li { background: var(--superficie); }
 }
 .meta-info { color: var(--texto-suave); font-size: .85rem; }
 
-/* Área reservada para o aviso de troca — a página não "pula" */
+/* Área reservada para os avisos (troca em andamento + alterações
+   não salvas). ALTURA FIXA: com ou sem avisos, ocupa sempre o mesmo
+   espaço, para que a sala abaixo não fique "pulando" ao selecionar
+   um aluno. Uma linha basta — os chips ficam lado a lado e o texto
+   excedente é cortado com reticências. */
 .area-status {
-    min-height: 2.6rem;
-    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
-    margin-bottom: .6rem;
+    height: 2.4rem;
+    display: flex; align-items: center; gap: .6rem;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    margin-bottom: .4rem;
+}
+.chip-status, .chip-alterado {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
 }
 .chip-status, .chip-alterado {
     display: inline-flex; align-items: center; gap: .4rem;
@@ -240,25 +258,38 @@ div[data-baseweb="popover"] li { background: var(--superficie); }
     -webkit-box-orient: vertical;
 }
 
-/* ---------- Card VAZIO (participa das trocas) ---------- */
+/* ---------- Card VAZIO (participa das trocas) ----------
+   Mesma estrutura interna do card de aluno (área da foto + área do
+   nome), portanto MESMO tamanho e MESMO espaçamento na grade.
+   Herda de .card-aluno o padding, a borda e o raio — aqui só muda
+   a aparência (fundo mais apagado e "foto" tracejada). */
 .card-aluno.card-vazio {
     background: rgba(18,42,78,.35);
-    border: 1.5px dashed rgba(159,179,206,.4);
-    display: grid; place-items: center;
-    aspect-ratio: 1 / 1.34;           /* ~altura de um card com foto + nome */
-    padding: 0;
+    border-style: dashed;
+    border-color: rgba(159,179,206,.4);
 }
 .card-aluno.card-vazio:hover { border-color: var(--azul-claro); }
 .card-aluno.card-vazio.selecionado {
     border: 2px solid var(--dourado);
     background: rgba(212,160,23,.08);
 }
+/* Ocupa exatamente o espaço da foto (mesmo aspect-ratio 1/1) */
+.card-foto-vazia {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    border: 1px dashed rgba(159,179,206,.35);
+    display: grid; place-items: center;
+}
+/* Linha do "nome" fica em branco, só para reservar a mesma altura */
+.card-nome-vazio { visibility: hidden; }
 .vazio-rotulo {
     color: rgba(159,179,206,.65);
     font-size: .72rem; font-weight: 700;
     letter-spacing: .18em;
 }
 .card-aluno.card-vazio.selecionado .vazio-rotulo { color: var(--dourado); }
+.card-aluno.card-vazio.selecionado .card-foto-vazia { border-color: rgba(212,160,23,.5); }
 
 /* ---------- Área "alunos sem lugar" ---------- */
 .secao-sem-lugar-titulo {
