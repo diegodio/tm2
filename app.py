@@ -13,9 +13,12 @@ FLUXO DA PÁGINA (nesta ordem):
    layout inicial (5 filas × 8 carteiras, VAZIO nas sobras).
 5. Sala — grade de cards com trocas (só para quem pode editar:
    professor conselheiro da turma, pedagoga ou diretor).
-6. Área "alunos sem lugar" + botão SALVAR (grava no Firebase via
-   requests). NADA é salvo automaticamente.
+6. Área "alunos sem lugar" + botão "Baixar mapeamento" (gera um
+   info.json com o mapeamento atual) + botão SALVAR (grava no Firebase
+   via requests, só para quem edita). NADA é salvo automaticamente.
 """
+import json
+
 import streamlit as st
 
 from components.layout_sala import (
@@ -30,7 +33,8 @@ from services import auth, firebase
 from services.arquivos import carregar_alunos, carregar_info
 from services.mapeamento import (
     completar_grade,
-    gerar_mapeamento_inicial,
+    exportar_para_info_json,
+    gerar_estado_inicial,
     reconciliar,
 )
 from utils.constantes import NOME_COLEGIO, ROTULOS_TURNOS, VAZIO
@@ -112,8 +116,7 @@ if st.session_state.get("contexto") != contexto:
         mapa, sem_lugar = salvo
         completar_grade(mapa)  # garante as 40 posições (VAZIO onde faltar)
     else:
-        mapa = gerar_mapeamento_inicial(alunos)
-        sem_lugar = []
+        mapa, sem_lugar = gerar_estado_inicial(alunos)
     # Sincroniza com o info.json (alunos novos, alunos que saíram)
     reconciliar(mapa, sem_lugar, alunos)
 
@@ -199,13 +202,26 @@ st.markdown(
 render_barra_acoes(editavel)
 
 # ------------------------------------------------------------------
-# 6) Sala + área "sem lugar" + botão Salvar (Firebase)
+# 6) Sala + área "sem lugar" + baixar mapeamento + botão Salvar (Firebase)
 # ------------------------------------------------------------------
 render_sala(turno, turma, numero_por_nome, editavel)
 render_sem_lugar(turno, turma, numero_por_nome, editavel)
 
+st.divider()
+
+# Baixa o mapeamento ATUAL da tela (com as trocas feitas na sessão) no
+# formato do info.json. Alunos fora do mapa saem com "posicao": "(0,0)".
+# Disponível também em modo somente leitura — é só uma exportação.
+dados_exportacao = exportar_para_info_json(mapa, sem_lugar, info)
+st.download_button(
+    "⬇️ Baixar mapeamento (info.json)",
+    data=json.dumps(dados_exportacao, ensure_ascii=False, indent=2),
+    file_name=f"info_{turma}.json",
+    mime="application/json",
+    key="btn_baixar_json",
+)
+
 if editavel:
-    st.divider()
     if st.button("💾 Salvar mapeamento", key="btn_salvar"):
         ok, motivo = firebase.salvar_mapeamento(turno, turma, mapa, sem_lugar)
         if ok:
